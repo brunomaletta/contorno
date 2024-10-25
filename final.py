@@ -3,8 +3,8 @@ import matplotlib.pyplot as plt
 from shapely import Polygon
 import geopy.distance
 import sys
-
-### Download map
+import matplotlib.animation as animation
+import numpy as np
 
 enclosing_coordinates = [
     (-43.9442396, -19.9389905), (-43.9374161, -19.9405336), (-43.9268053, -19.9394141),
@@ -31,34 +31,51 @@ for i in range(n):
 
 tour = [int(x) for x in input().split()]
 
-axis = plt.axes()
-ox.plot_graph(G, ax = axis, figsize = (40, 40), node_size=1, show=False)
+fig, ax = plt.subplots()
+ox.plot_graph(G, ax = ax, figsize = (40, 40), node_size=1, show=False)
 
 final_ans = 0
-
-#fig, ax = plt.subplots()
 
 for i in range(len(tour)):
 	j = (i+1)%len(tour)
 	x_values = [coords[tour[i]][0], coords[tour[j]][0]]
 	y_values = [coords[tour[i]][1], coords[tour[j]][1]]
-	plt.plot(x_values, y_values, color="red", lw=0.8)
+	#plt.plot(x_values, y_values, color="red", lw=0.8)
 	final_ans += dist(coords[tour[i]], coords[tour[j]])
 
-#def update(frame):
-#    # for each frame, update the data stored on each artist.
-#    x = t[:frame]
-#    y = z[:frame]
-#    # update the scatter plot:
-#    data = np.stack([x, y]).T
-#    scat.set_offsets(data)
-#    # update the line plot:
-#    line2.set_xdata(t[:frame])
-#    line2.set_ydata(z2[:frame])
-#    return (scat, line2)
-#
-#ani = FuncAnimation(fig, update, frames=40, interval=30)
-#
-#ani.save("test.gif",writer="imagemagick")
+def hex_to_RGB(hex_str):
+    """ #FFFFFF -> [255,255,255]"""
+    #Pass 16 to the integer function for change of base
+    return [int(hex_str[i:i+2], 16) for i in range(1,6,2)]
+def get_color_gradient(c1, c2, n):
+    """
+    Given two hex colors, returns a color gradient
+    with n colors.
+    """
+    assert n > 1
+    c1_rgb = np.array(hex_to_RGB(c1))/255
+    c2_rgb = np.array(hex_to_RGB(c2))/255
+    mix_pcts = [x/(n-1) for x in range(n)]
+    rgb_colors = [((1-mix)*c1_rgb + (mix*c2_rgb)) for mix in mix_pcts]
+    return ["#" + "".join([format(int(round(val*255)), "02x") for val in item]) for item in rgb_colors]
+
+
+color1 = "#090979"
+color2 = "#FF0000"
+colors = get_color_gradient(color1, color2, len(tour))
+
+def animate(i):
+	j = (i+1)%len(tour)
+	x_values = [coords[tour[i]][0], coords[tour[j]][0]]
+	y_values = [coords[tour[i]][1], coords[tour[j]][1]]
+	ax.plot(x_values, y_values, color=colors[i], lw=1.5)
+
+(x_text, y_text) = enclosing_coordinates[0]
+x_text -= 0.01
+ax.text(x_text, y_text, str(int(final_ans)/float(1000)) + " km")
+
+anim = animation.FuncAnimation(fig, animate, frames=len(tour), interval=30)
+
+anim.save("tour.gif",writer="imagemagick")
 plt.savefig('final_output.pdf')
 print(final_ans)
