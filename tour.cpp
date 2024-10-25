@@ -10,6 +10,54 @@ typedef long long ll;
 const int INF = 0x3f3f3f3f;
 const ll LINF = 0x3f3f3f3f3f3f3f3fll;
 
+using namespace chrono;
+struct timer : high_resolution_clock {
+	const time_point start;
+	timer(): start(now()) {}
+	int operator()() {
+		return duration_cast<milliseconds>(now() - start).count();
+	}
+};
+
+typedef double ld;
+const ld DINF = 1e18;
+const ld pi = acos(-1.0);
+const ld eps = 1e-9;
+
+#define sq(x) ((x)*(x))
+
+bool eq(ld a, ld b) {
+	return abs(a - b) <= eps;
+}
+
+struct pt { // ponto
+	ld x, y;
+	pt(ld x_ = 0, ld y_ = 0) : x(x_), y(y_) {}
+	bool operator < (const pt p) const {
+		if (!eq(x, p.x)) return x < p.x;
+		if (!eq(y, p.y)) return y < p.y;
+		return 0;
+	}
+	bool operator == (const pt p) const {
+		return eq(x, p.x) and eq(y, p.y);
+	}
+	pt operator + (const pt p) const { return pt(x+p.x, y+p.y); }
+	pt operator - (const pt p) const { return pt(x-p.x, y-p.y); }
+	pt operator * (const ld c) const { return pt(x*c  , y*c  ); }
+	pt operator / (const ld c) const { return pt(x/c  , y/c  ); }
+	ld operator * (const pt p) const { return x*p.x + y*p.y; }
+	ld operator ^ (const pt p) const { return x*p.y - y*p.x; }
+	friend istream& operator >> (istream& in, pt& p) {
+		return in >> p.x >> p.y;
+	}
+};
+
+ld angle(pt v) { // angulo do vetor com o eixo x
+	ld ang = atan2(v.y, v.x);
+	if (ang < 0) ang += 2*pi;
+	return ang;
+}
+
 namespace blossom{
 	#define d(x) (lab[x.u]+lab[x.v]-e[x.u][x.v].w*2)
 	const int N=403*2; using ll = long long; using T = int; // sum of weight, single weight
@@ -118,6 +166,22 @@ namespace blossom{
 	#undef d
 }
 
+const int MAX = 1000;
+
+ll d[MAX][MAX];
+int prv[MAX][MAX];
+int n;
+vector<pt> coord;
+map<int, int> mp, orig;
+
+void floyd_warshall() {
+	for (int k = 0; k < n; k++) for (int i = 0; i < n; i++) for (int j = 0; j < n; j++)
+		if (d[i][k] + d[k][j] < d[i][j]) {
+			d[i][j] = d[i][k] + d[k][j];
+			prv[i][j] = prv[k][j];
+		}
+}
+
 template<bool directed=false> struct euler {
 	int n;
 	vector<vector<pair<int, int>>> g;
@@ -130,17 +194,31 @@ template<bool directed=false> struct euler {
 		g[a].emplace_back(b, at);
 		if (!directed) g[b].emplace_back(a, at);
 	}
-#warning chamar para o src certo!
 	pair<bool, vector<pair<int, int>>> get_path(int src) {
 		if (!used.size()) return {true, {}};
-		vector<int> beg(n, 0);
 		for (int& i : used) i = 0;
 		// {{vertice, anterior}, label}
 		vector<pair<pair<int, int>, int>> ret, st = {{{src, -1}, -1}};
 		while (st.size()) {
 			int at = st.back().first.first;
-			int& it = beg[at];
-			while (it < g[at].size() and used[g[at][it].second]) it++;
+			int prv = -1;
+			if (st.size() > 1) prv = st.end()[-2].first.first;
+			int prv2 = -1;
+			if (st.size() > 2) prv2 = st.end()[-3].first.first;
+			int it = g[at].size();
+			double min_angle = 1e18;
+			for (int i = 0; i < g[at].size(); i++) if (!used[g[at][i].second]) {
+				it = i;
+				break;
+				double v1 = prv == -1 ? 0 : angle(coord[orig[at]] - coord[orig[prv]]);
+				double v2 = prv2 == -1 ? v1 : angle(coord[orig[prv]] - coord[orig[prv2]]);
+				double th = abs(v1 - v2);
+				if (th > pi) th = 2*pi - th;
+				if (th < min_angle) {
+					min_angle = th;
+					it = i;
+				}
+			}
 			if (it == g[at].size()) {
 				if (ret.size() and ret.back().first.second != at)
 					return {false, {}};
@@ -169,18 +247,20 @@ template<bool directed=false> struct euler {
 	}
 };
 
-const int MAX = 1000;
-
-ll d[MAX][MAX];
-int prv[MAX][MAX];
-int n;
-
-void fw() {
-	for (int k = 0; k < n; k++) for (int i = 0; i < n; i++) for (int j = 0; j < n; j++)
-		if (d[i][k] + d[k][j] < d[i][j]) {
-			d[i][j] = d[i][k] + d[k][j];
-			prv[i][j] = prv[k][j];
+double eval(vector<pair<int, int>> tour) {
+	vector<pt> last;
+	double val = 0;
+	for (auto [a, b] : tour) {
+		last.push_back(coord[orig[a]]);
+		if (last.size() >= 3) {
+			double v1 = angle(last.end()[-1] - last.end()[-2]);
+			double v2 = angle(last.end()[-2] - last.end()[-3]);
+			double th = abs(v1 - v2);
+			if (th > pi) th = 2*pi - th;
+			val += th*th*th;
 		}
+	}
+	return val;
 }
 
 int main() { _
@@ -188,7 +268,6 @@ int main() { _
 	bool started = false;
 	vector<tuple<int, int, int>> edg;
 	ll sum = 0;
-	vector<pair<double, double>> coord;
 	while (getline(cin, line)) {
 		if (!line.size()) {
 			started = true;
@@ -209,7 +288,6 @@ int main() { _
 		sum += (int) c;
 	}
 	//cout << "sum: " << sum << endl;
-	map<int, int> mp, orig;
 	auto get_id = [&](int i) {
 		auto it = mp.find(i);
 		if (it != mp.end()) return it->second;
@@ -252,7 +330,8 @@ int main() { _
 	//cout << "n: " << n << endl;
 	vector<int> deg(n);
 	for (auto [a, b, c] : edg) deg[a]++, deg[b]++;
-	fw();
+
+	floyd_warshall();
 	vector<tuple<int, int, ll>> blossom_edge;
 	for (int i = 0; i < n; i++) if (deg[i] % 2)
 		for (int j = i+1; j < n; j++) if (deg[j] % 2)
@@ -263,31 +342,59 @@ int main() { _
 	auto [weight, matching] = blossom::run(n, blossom_edge);
 	//cout << 1000*matching.size() -weight << endl;
 
-	euler E(n);
-	for (auto [a, b, c] : edg) E.add(a, b);
+	mt19937 rng(0);
+	//shuffle(edg.begin(), edg.end(), rng);
 
 	ll ans = sum2;
 	for (auto [a, b] : matching) {
 		while (a != b) {
 			int a2 = prv[b][a];
 			deg[a]++, deg[a2]++;
-			E.add(a, a2);
+			edg.emplace_back(a, a2, d[a][a2]);
 			ans += d[a][a2];
 			assert(a2 != -1);
 			a = a2;
 		}
 	}
-	for (int i = 0; i < n; i++) assert(deg[i]%2 == 0);
-	//cout << "ans: " << ans << endl;
 
-	auto [is_euler, tour] = E.get_cycle();
-	assert(is_euler);
+	for (int i = 0; i < n; i++) assert(deg[i]%2 == 0);
+
+	sort(edg.begin(), edg.end(), [&](auto e1, auto e2) {
+		auto [a1, b1, c1] = e1;
+		auto [a2, b2, c2] = e2;
+		pt v1 = coord[orig[b1]] - coord[orig[a1]];
+		pt v2 = coord[orig[b2]] - coord[orig[a2]];
+		double th1 = angle(v1), th2 = angle(v2);
+		if (abs(th1 - th2) < eps) return false;
+		return th1 < th2;
+	});
+
+	vector<pair<int, int>> min_tour;
+	double min_val = 1e18;
+
+	timer T;
+	while (T() < 5000000) {
+		for (int i = 0; i < 1; i++) {
+			int a = rng() % edg.size(), b = rng() % edg.size();
+			swap(edg[a], edg[b]);
+		}
+		euler E(n);
+		for (auto [a, b, c] : edg) E.add(a, b);
+		auto [is_euler, tour] = E.get_cycle();
+		assert(is_euler);
+
+		double val = eval(tour);
+		if (val < min_val) {
+			min_val = val;
+			min_tour = tour;
+		}
+	}
 
 	cout << fixed << setprecision(8);
 	cout << n << endl;
-	for (int i = 0; i < n; i++) cout << coord[orig[i]].first << " "
-		<< coord[orig[i]].second << endl;
-	for (auto i : tour) cout << i.first << " ";
+	for (int i = 0; i < n; i++) cout << coord[orig[i]].x << " "
+		<< coord[orig[i]].y << endl;
+	for (auto i : min_tour) cout << i.first << " ";
 	cout << endl;
 	exit(0);
 }
