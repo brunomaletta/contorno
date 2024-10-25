@@ -36,12 +36,23 @@ ox.plot_graph(G, ax = ax, figsize = (40, 40), node_size=1, show=False)
 
 final_ans = 0
 
+print ("""<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.0"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        creator="Bruno Monteiro"
+        xmlns="http://www.topografix.com/GPX/1/0"
+        xsi:schemaLocation="http://www.topografix.com/GPX/1/0 http://www.topografix.com/GPX/1/0/gpx.xsd">
+<trk><trkseg>""")
+
 for i in range(len(tour)):
 	j = (i+1)%len(tour)
 	x_values = [coords[tour[i]][0], coords[tour[j]][0]]
 	y_values = [coords[tour[i]][1], coords[tour[j]][1]]
-	#plt.plot(x_values, y_values, color="red", lw=0.8)
 	final_ans += dist(coords[tour[i]], coords[tour[j]])
+	print("<trkpt lon=\"" + str(coords[tour[i]][0]) + "\" lat=\"" + str(coords[tour[i]][1]) + "\"></trkpt>")
+print("""</trkseg></trk>
+</gpx>
+""")
 
 def hex_to_RGB(hex_str):
     """ #FFFFFF -> [255,255,255]"""
@@ -65,17 +76,18 @@ color2 = "#FF0000"
 colors = get_color_gradient(color1, color2, len(tour))
 
 def animate(i):
+	if i >= len(tour):
+		return
 	j = (i+1)%len(tour)
 	x_values = [coords[tour[i]][0], coords[tour[j]][0]]
 	y_values = [coords[tour[i]][1], coords[tour[j]][1]]
 	ax.plot(x_values, y_values, color=colors[i], lw=1.5)
 
 (x_text, y_text) = enclosing_coordinates[0]
-x_text -= 0.01
+x_text -= 0.015
 ax.text(x_text, y_text, str(int(final_ans)/float(1000)) + " km")
 
-anim = animation.FuncAnimation(fig, animate, frames=len(tour), interval=30)
+anim = animation.FuncAnimation(fig, animate, frames=len(tour)+30*3, interval=30)
 
 anim.save("tour.gif",writer="imagemagick")
 plt.savefig('final_output.pdf')
-print(final_ans)
