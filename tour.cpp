@@ -166,7 +166,7 @@ namespace blossom{
 	#undef d
 }
 
-const int MAX = 1000;
+const int MAX = 5000;
 
 ll d[MAX][MAX];
 int prv[MAX][MAX];
@@ -182,86 +182,9 @@ void floyd_warshall() {
 		}
 }
 
-template<bool directed=false> struct euler {
-	int n;
-	vector<vector<pair<int, int>>> g;
-	vector<int> used;
-
-	euler(int n_) : n(n_), g(n) {}
-	void add(int a, int b) {
-		int at = used.size();
-		used.push_back(0);
-		g[a].emplace_back(b, at);
-		if (!directed) g[b].emplace_back(a, at);
-	}
-	pair<bool, vector<pair<int, int>>> get_path(int src) {
-		if (!used.size()) return {true, {}};
-		for (int& i : used) i = 0;
-		// {{vertice, anterior}, label}
-		vector<pair<pair<int, int>, int>> ret, st = {{{src, -1}, -1}};
-		while (st.size()) {
-			int at = st.back().first.first;
-			int prv = -1;
-			if (st.size() > 1) prv = st.end()[-2].first.first;
-			int prv2 = -1;
-			if (st.size() > 2) prv2 = st.end()[-3].first.first;
-			int it = g[at].size();
-			double min_angle = 1e18;
-			for (int i = 0; i < g[at].size(); i++) if (!used[g[at][i].second]) {
-				it = i;
-				break;
-				double v1 = prv == -1 ? 0 : angle(coord[orig[at]] - coord[orig[prv]]);
-				double v2 = prv2 == -1 ? v1 : angle(coord[orig[prv]] - coord[orig[prv2]]);
-				double th = abs(v1 - v2);
-				if (th > pi) th = 2*pi - th;
-				if (th < min_angle) {
-					min_angle = th;
-					it = i;
-				}
-			}
-			if (it == g[at].size()) {
-				if (ret.size() and ret.back().first.second != at)
-					return {false, {}};
-				ret.push_back(st.back()), st.pop_back();
-			} else {
-				st.push_back({{g[at][it].first, at}, g[at][it].second});
-				used[g[at][it].second] = 1;
-			}
-		}
-		if (ret.size() != used.size()+1) return {false, {}};
-		vector<pair<int, int>> ans;
-		for (auto i : ret) ans.emplace_back(i.first.first, i.second);
-		reverse(ans.begin(), ans.end());
-		return {true, ans};
-	}
-	pair<bool, vector<pair<int, int>>> get_cycle() {
-		if (!used.size()) return {true, {}};
-		int src = 0;
-		while (!g[src].size()) src++;
-		auto ans = get_path(src);
-		if (!ans.first or ans.second[0].first != ans.second.back().first)
-			return {false, {}};
-		ans.second[0].second = ans.second.back().second;
-		ans.second.pop_back();
-		return ans;
-	}
-};
-
-double eval(vector<pair<int, int>> tour) {
-	vector<pt> last;
-	double val = 0;
-	for (auto [a, b] : tour) {
-		last.push_back(coord[orig[a]]);
-		if (last.size() >= 3) {
-			double v1 = angle(last.end()[-1] - last.end()[-2]);
-			double v2 = angle(last.end()[-2] - last.end()[-3]);
-			double th = abs(v1 - v2);
-			if (th > pi) th = 2*pi - th;
-			val += th*th*th;
-		}
-	}
-	return val;
-}
+vector<pair<int, int>> g[MAX]; // v, id
+int used[MAX];
+int vis[MAX];
 
 int main() { _
 	string line;
@@ -336,9 +259,6 @@ int main() { _
 	for (int i = 0; i < n; i++) if (deg[i] % 2)
 		for (int j = i+1; j < n; j++) if (deg[j] % 2)
 			blossom_edge.emplace_back(i, j, 1000-d[i][j]);
-	int qt_odd = 0;
-	for (int i = 0; i < n; i++) if (deg[i] % 2) qt_odd++;
-	//cout << "qt_odd: " << qt_odd << endl;
 	auto [weight, matching] = blossom::run(n, blossom_edge);
 	//cout << 1000*matching.size() -weight << endl;
 
@@ -357,36 +277,60 @@ int main() { _
 		}
 	}
 
-	for (int i = 0; i < n; i++) assert(deg[i]%2 == 0);
+	for (int i = 0; i < n; i++) {
+		assert(deg[i]%2 == 0);
+		assert(deg[i] > 0);
+	}
 
-	sort(edg.begin(), edg.end(), [&](auto e1, auto e2) {
-		auto [a1, b1, c1] = e1;
-		auto [a2, b2, c2] = e2;
-		pt v1 = coord[orig[b1]] - coord[orig[a1]];
-		pt v2 = coord[orig[b2]] - coord[orig[a2]];
-		double th1 = angle(v1), th2 = angle(v2);
-		if (abs(th1 - th2) < eps) return false;
-		return th1 < th2;
-	});
+	for (int i = 0; i < edg.size(); i++) {
+		auto [a, b, c] = edg[i];
+		g[a].emplace_back(b, i);
+		g[b].emplace_back(a, i);
+	}
 
-	vector<pair<int, int>> min_tour;
-	double min_val = 1e18;
+	vector<int> tour = {0};
+	int at = 0;
+	while (tour.size() < edg.size()+1) {
+		auto ang = [&](int i) -> double {
+			if (tour.size() < 2) return 0;
+			double v1 = angle(coord[orig[i]] - coord[orig[tour.end()[-1]]]);
+			double v2 = angle(coord[orig[tour.end()[-1]]] - coord[orig[tour.end()[-2]]]);
+			double th = abs(v1 - v2);
+			if (th > pi) th = 2*pi - th;
+			return th;
+		};
+		sort(g[at].begin(), g[at].end(), [&](auto a, auto b) {
+			double th1 = ang(a.first), th2 = ang(b.first);
+			if (abs(th1 - th2) < eps) return false;
+			return th1 < th2;
+		});
+		for (auto [i, id] : g[at]) if (!used[id]) {
+			deg[at]--, deg[i]--;
+			used[id] = 1;
+			for (int j = 0; j < n; j++) vis[j] = 0;
 
-	timer T;
-	while (T() < 5000000) {
-		for (int i = 0; i < 1; i++) {
-			int a = rng() % edg.size(), b = rng() % edg.size();
-			swap(edg[a], edg[b]);
-		}
-		euler E(n);
-		for (auto [a, b, c] : edg) E.add(a, b);
-		auto [is_euler, tour] = E.get_cycle();
-		assert(is_euler);
-
-		double val = eval(tour);
-		if (val < min_val) {
-			min_val = val;
-			min_tour = tour;
+			int fi = 0;
+			while (deg[fi] == 0) fi++;
+			vector<int> st = {fi};
+			vis[fi] = 1;
+			while (st.size()) {
+				int j = st.back(); st.pop_back();
+				for (auto [k, id2] : g[j]) if (!used[id2] and !vis[k]) {
+					vis[k] = 1;
+					st.push_back(k);
+				}
+			}
+			bool con = true;
+			for (int j = 0; j < n; j++) if (!vis[j] and deg[j] > 0) con = false;
+			int cnt_odd = 0;
+			for (int j = 0; j < n; j++) if (deg[j]%2) cnt_odd++;
+			if (con and cnt_odd <= 2) {
+				at = i;
+				tour.push_back(at);
+				break;
+			}
+			used[id] = 0;
+			deg[at]++, deg[i]++;
 		}
 	}
 
@@ -394,7 +338,7 @@ int main() { _
 	cout << n << endl;
 	for (int i = 0; i < n; i++) cout << coord[orig[i]].x << " "
 		<< coord[orig[i]].y << endl;
-	for (auto i : min_tour) cout << i.first << " ";
+	for (auto i : tour) cout << i << " ";
 	cout << endl;
 	exit(0);
 }
