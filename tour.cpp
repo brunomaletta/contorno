@@ -290,6 +290,7 @@ int main() { _
 
 	vector<int> tour = {0};
 	int at = 0;
+	bool lap = false;
 	while (tour.size() < edg.size()+1) {
 		auto ang = [&](int i) -> double {
 			if (tour.size() < 2) return 0;
@@ -297,6 +298,10 @@ int main() { _
 			double v2 = angle(coord[orig[tour.end()[-1]]] - coord[orig[tour.end()[-2]]]);
 			double th = abs(v1 - v2);
 			if (th > pi) th = 2*pi - th;
+			if (!lap) {
+				th = v1 - v2 + pi/2 + 2*pi;
+				while (th > 2*pi) th -= 2*pi;
+			}
 			return th;
 		};
 		sort(g[at].begin(), g[at].end(), [&](auto a, auto b) {
@@ -327,12 +332,15 @@ int main() { _
 			if (con and cnt_odd <= 2) {
 				at = i;
 				tour.push_back(at);
+				if (at == 0) lap = true;
 				break;
 			}
 			used[id] = 0;
 			deg[at]++, deg[i]++;
 		}
 	}
+
+	reverse(tour.begin(), tour.end());
 
 	cout << fixed << setprecision(8);
 	cout << n << endl;
