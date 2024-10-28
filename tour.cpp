@@ -190,7 +190,6 @@ int main() { _
 	string line;
 	bool started = false;
 	vector<tuple<int, int, int>> edg;
-	ll sum = 0;
 	while (getline(cin, line)) {
 		if (!line.size()) {
 			started = true;
@@ -208,9 +207,7 @@ int main() { _
 		stringstream ss(line);
 		ss >> a >> b >> c;
 		edg.emplace_back(a, b, (int) c);
-		sum += (int) c;
 	}
-	//cout << "sum: " << sum << endl;
 	auto get_id = [&](int i) {
 		auto it = mp.find(i);
 		if (it != mp.end()) return it->second;
@@ -240,17 +237,18 @@ int main() { _
 		edg2.emplace_back(a, b, c);
 	}
 	edg = edg2;
-	ll sum2 = 0;
+	ll sum = 0;
 	for (auto& [a, b, c] : edg) {
-		sum2 += c;
+		sum += c;
 		d[a][b] = d[b][a] = c;
 		prv[a][b] = a;
 		prv[b][a] = b;
 		n = max({n, a, b});
 	}
-	//cout << "sum2: " << sum2 << endl;
 	n++;
-	//cout << "n: " << n << endl;
+	cerr << "n: " << n << endl;
+	cerr << "m: " << edg.size() << endl;;
+	cerr << "sum of edges: " << sum << endl;
 	vector<int> deg(n);
 	for (auto [a, b, c] : edg) deg[a]++, deg[b]++;
 
@@ -258,14 +256,14 @@ int main() { _
 	vector<tuple<int, int, ll>> blossom_edge;
 	for (int i = 0; i < n; i++) if (deg[i] % 2)
 		for (int j = i+1; j < n; j++) if (deg[j] % 2)
-			blossom_edge.emplace_back(i, j, 1000-d[i][j]);
+			blossom_edge.emplace_back(i, j, 1000000-d[i][j]);
 	auto [weight, matching] = blossom::run(n, blossom_edge);
-	//cout << 1000*matching.size() -weight << endl;
+	weight = 1000000*matching.size() - weight;
 
 	mt19937 rng(0);
 	//shuffle(edg.begin(), edg.end(), rng);
 
-	ll ans = sum2;
+	ll ans = sum;
 	for (auto [a, b] : matching) {
 		while (a != b) {
 			int a2 = prv[b][a];
@@ -276,6 +274,8 @@ int main() { _
 			a = a2;
 		}
 	}
+
+	cerr << "final ans: " << ans << endl;
 
 	for (int i = 0; i < n; i++) {
 		assert(deg[i]%2 == 0);
@@ -288,9 +288,11 @@ int main() { _
 		g[b].emplace_back(a, i);
 	}
 
-	vector<int> tour = {0};
-	int at = 0;
+	int INI = 0;
+	vector<int> tour = {INI};
+	int at = INI;
 	bool lap = false;
+	int num_corners = 0, num_straights = 0;
 	while (tour.size() < edg.size()+1) {
 		auto ang = [&](int i) -> double {
 			if (tour.size() < 2) return 0;
@@ -332,7 +334,14 @@ int main() { _
 			if (con and cnt_odd <= 2) {
 				at = i;
 				tour.push_back(at);
-				if (at == 0) lap = true;
+				if (at == INI) lap = true;
+
+				double v1 = angle(coord[orig[i]] - coord[orig[tour.end()[-1]]]);
+				double v2 = angle(coord[orig[tour.end()[-1]]] - coord[orig[tour.end()[-2]]]);
+				double th = abs(v1 - v2);
+				if (th > pi) th = 2*pi - th;
+				if (lap and th > pi/12) num_corners++;
+				else num_straights++;
 				break;
 			}
 			used[id] = 0;
@@ -340,7 +349,12 @@ int main() { _
 		}
 	}
 
+	assert(tour[0] == tour.end()[-1]);
+
 	reverse(tour.begin(), tour.end());
+
+	cerr << "number of corners: " << num_corners << endl;
+	cerr << "number of straights: " << num_straights << endl;
 
 	cout << fixed << setprecision(8);
 	cout << n << endl;
