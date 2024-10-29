@@ -190,6 +190,7 @@ int main() { _
 	string line;
 	bool started = false;
 	vector<tuple<int, int, int>> edg;
+	vector<int> neigh;
 	while (getline(cin, line)) {
 		if (!line.size()) {
 			started = true;
@@ -198,8 +199,10 @@ int main() { _
 		if (!started) {
 			stringstream ss(line);
 			double a, b;
-			ss >> a >> b;
+			int c;
+			ss >> a >> b >> c;
 			coord.emplace_back(a, b);
+			neigh.push_back(c);
 			continue;
 		}
 		int a, b;
@@ -304,11 +307,13 @@ int main() { _
 				th = v1 - v2 + pi/2 + 2*pi;
 				while (th > 2*pi) th -= 2*pi;
 			}
+			//if (lap) th += 10 * (neigh[orig[i]] != neigh[orig[tour.end()[-1]]]);
 			return th;
 		};
+		map<int, int> angs;
+		for (auto [i, id] : g[at]) angs[id] = 1000000*ang(i);
 		sort(g[at].begin(), g[at].end(), [&](auto a, auto b) {
-			double th1 = ang(a.first), th2 = ang(b.first);
-			if (abs(th1 - th2) < eps) return false;
+			int th1 = angs[a.second], th2 = angs[b.second];
 			return th1 < th2;
 		});
 		for (auto [i, id] : g[at]) if (!used[id]) {
@@ -359,7 +364,7 @@ int main() { _
 	cout << fixed << setprecision(8);
 	cout << n << endl;
 	for (int i = 0; i < n; i++) cout << coord[orig[i]].x << " "
-		<< coord[orig[i]].y << endl;
+		<< coord[orig[i]].y << " " << neigh[orig[i]] << endl;
 	for (auto i : tour) cout << i << " ";
 	cout << endl;
 	exit(0);

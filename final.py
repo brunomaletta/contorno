@@ -25,9 +25,11 @@ def dist(coord1, coord2):
 
 n = int(input())
 coords = []
+neigh = []
 for i in range(n):
-	a, b = (float(x) for x in input().split())
+	a, b, c = (float(x) for x in input().split())
 	coords.append((a, b));
+	neigh.append(int(round(c)))
 
 tour = [int(x) for x in input().split()]
 
@@ -71,9 +73,16 @@ def get_color_gradient(c1, c2, n):
     return ["#" + "".join([format(int(round(val*255)), "02x") for val in item]) for item in rgb_colors]
 
 
-color1 = "#090979"
-color2 = "#FF0000"
-colors = get_color_gradient(color1, color2, len(tour))
+color_dark_blue = "#090979"
+color_red = "#FF0000"
+color_green = "#00FF00"
+color_blue = "#0000FF"
+colors = get_color_gradient(color_dark_blue, color_red, len(tour))
+colors_neigh = get_color_gradient(color_red, color_blue, max(neigh)+1)
+
+#for i in range(n):
+#	c = colors_neigh[neigh[i]]
+#	ax.plot(coords[i][0], coords[i][1], color=c, marker='o')
 
 def animate(i):
 	if i >= len(tour):
