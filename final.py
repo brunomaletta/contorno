@@ -4,6 +4,7 @@ from shapely import Polygon
 import geopy.distance
 import sys
 import matplotlib.animation as animation
+import matplotlib.patches as patches
 import numpy as np
 
 enclosing_coordinates = [
@@ -84,19 +85,32 @@ colors_neigh = get_color_gradient(color_red, color_blue, max(neigh)+1)
 #	c = colors_neigh[neigh[i]]
 #	ax.plot(coords[i][0], coords[i][1], color=c, marker='o')
 
+(x_text, y_text) = enclosing_coordinates[0]
+x_text -= 0.015
+text = ax.text(x_text, y_text, str(int(final_ans)/float(1000)) + " km")
+x_values = [coords[tour[i]][0]]
+y_values = [coords[tour[i]][1]]
+ball = ax.scatter(x_values, y_values, color = colors[0])
+
+final_ans = 0
 def animate(i):
+	global final_ans
 	if i >= len(tour):
 		return
 	j = (i+1)%len(tour)
 	x_values = [coords[tour[i]][0], coords[tour[j]][0]]
 	y_values = [coords[tour[i]][1], coords[tour[j]][1]]
+	final_ans += dist(coords[tour[i]], coords[tour[j]])
 	ax.plot(x_values, y_values, color=colors[i], lw=1.5)
 
-(x_text, y_text) = enclosing_coordinates[0]
-x_text -= 0.015
-ax.text(x_text, y_text, str(int(final_ans)/float(1000)) + " km")
+	#text.set_text(f'{i*100//len(tour)}%')
+	#text.set_text(f'{int(final_ans)/float(1000)} km')
+	text.set_text('{:.1f} km'.format(int(final_ans)/float(1000)))
+	ball.set_offsets(np.c_[x_values[-1:], y_values[-1:]])
+	ball.set_facecolor([colors[i]])
+	ball.set_edgecolor([colors[i]])
 
-anim = animation.FuncAnimation(fig, animate, frames=len(tour)+30*3, interval=30)
+anim = animation.FuncAnimation(fig, animate, frames=len(tour)+30*3, interval=10)
 
 anim.save("tour.gif",writer="imagemagick")
 plt.savefig('final_output.pdf')
