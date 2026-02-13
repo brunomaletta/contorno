@@ -81,3 +81,8 @@ svg {
   pointer-events: none;   /* doesn't block clicks */
 }
 
+
+#speed {
+  width: 50px;
+}
+
