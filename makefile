@@ -5,4 +5,4 @@ all:
 	./tour < graph_neigh.txt > tour.txt
 	rm tour
 	python3 final.py < tour.txt > tour.gpx
-	ffmpeg -i tour.gif -movflags faststart -pix_fmt yuv420p -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" video.mp4
+	ffmpeg -y -i tour.gif -movflags faststart -pix_fmt yuv420p -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" video.mp4
