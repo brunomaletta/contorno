@@ -112,5 +112,5 @@ def animate(i):
 
 anim = animation.FuncAnimation(fig, animate, frames=len(tour)+30*3, interval=10)
 
-anim.save("tour.gif",writer="imagemagick")
+anim.save("tour.gif",writer="pillow")
 plt.savefig('final_output.pdf')
