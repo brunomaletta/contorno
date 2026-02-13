@@ -24,3 +24,60 @@ svg {
   border-radius: 12px;
   box-shadow: 0 20px 50px rgba(0,0,0,0.4);
 }
+
+
+.controls {
+  position: fixed;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+
+  display: flex;
+  gap: 18px;
+  align-items: center;
+
+  padding: 14px 22px;
+  border-radius: 14px;
+
+  background: rgba(0,0,0,0.6);
+  backdrop-filter: blur(8px);
+  color: white;
+  font-family: sans-serif;
+}
+
+.controls button {
+  width: 110px;        /* adjust until it fits nicely */
+  height: 30px;        /* adjust until it fits nicely */
+  background: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.stats {
+  display: flex;
+  gap: 16px;
+  min-width: 150px;
+}
+
+#bigDistance {
+  filter: drop-shadow(0 0 8px rgba(255,255,255,0.4));
+
+  position: fixed;
+  top: 15%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+
+  font-size: 100px;
+  opacity: 0.9;
+
+  color: white;
+  text-align: right;
+
+  text-shadow: 0 0 12px rgba(0,0,0,0.6);
+
+  pointer-events: none;   /* doesn't block clicks */
+}
+
