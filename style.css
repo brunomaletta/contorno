@@ -1,0 +1,26 @@
+body {
+  margin: 0;
+  height: 100vh;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  background:
+    linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)),
+    url("bandeira.svg");
+
+  background-size: cover;
+  background-position: center;
+}
+
+
+svg {
+  width: 90vw;
+  height: auto;          /* IMPORTANT */
+  max-height: 90vh;
+
+  background: rgba(0, 0, 0, 0.6); /* dark, 60% opacity */
+  border-radius: 12px;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.4);
+}
