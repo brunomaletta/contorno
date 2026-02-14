@@ -1,11 +1,12 @@
 
 body {
   margin: 0;
-  height: 100vh;
+  height: 100dvh;   /* modern dynamic viewport */
 
   display: flex;
   justify-content: center;
   align-items: center;
+  overflow-x: hidden;
 }
 
 
@@ -258,5 +259,9 @@ body {
   }
 }
 
-}
 
+html, body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+}
