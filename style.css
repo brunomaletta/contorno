@@ -56,8 +56,9 @@ body {
 }
 
 .controls button {
-  width: 110px;        /* adjust until it fits nicely */
-  height: 30px;        /* adjust until it fits nicely */
+  min-width: 110px;
+  padding: 8px 16px;
+  font-size: 0.9rem;
   background: white;
   padding: 8px 16px;
   border: none;
@@ -228,5 +229,34 @@ body {
   0%   { transform: scale(1); }
   50%  { transform: scale(1.15); }
   100% { transform: scale(1); }
+}
+
+
+@media (max-width: 768px) {
+
+#coveredDistance {
+		font-size: clamp(40px, 10vw, 100px);
+	}
+
+    .controls button {
+		font-size: 0.9rem;
+		justify-content: center;
+		gap: 12px;
+	}
+
+  .controls {
+    flex-wrap: wrap;
+	 transform: translateX(-50%) translateY(28%) scale(0.6);
+  }
+
+  .controls button {
+    flex: 1 1 45%;
+  }
+
+  #progress {
+    flex: 1 1 100%;
+  }
+}
+
 }
 
