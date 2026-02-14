@@ -258,6 +258,11 @@ body {
   #progress {
     flex: 1 1 100%;
   }
+
+  .map svg {
+    transform: scale(1.178);
+    transform-origin: center;
+  }
 }
 
 html, body {
