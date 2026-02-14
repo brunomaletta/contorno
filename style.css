@@ -94,7 +94,7 @@ body {
 #coveredDistance {
   font-size: 100px;
   font-weight: 600;
-  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
 #totalDistance {
