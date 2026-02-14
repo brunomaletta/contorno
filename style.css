@@ -84,11 +84,21 @@ body {
   opacity: 0.9;
 
   color: white;
-  text-align: right;
+  text-align: center;
 
   text-shadow: 0 0 12px rgba(0,0,0,0.6);
 
   pointer-events: none;   /* doesn't block clicks */
+}
+
+#coveredDistance {
+  font-size: 100px;
+  font-weight: 600;
+}
+
+#totalDistance {
+  font-size: 20px;
+  opacity: 0.7;
 }
 
 
@@ -201,4 +211,20 @@ body {
   color: white;
 
   border: 1px solid black;
+}
+
+.completed #route {
+  stroke: #00ff88;
+  filter: drop-shadow(0 0 20px #00ff88);
+  transition: stroke 0.6s ease, filter 0.6s ease;
+}
+
+.completed #coveredDistance {
+  animation: pulseFinish 0.8s ease;
+}
+
+@keyframes pulseFinish {
+  0%   { transform: scale(1); }
+  50%  { transform: scale(1.15); }
+  100% { transform: scale(1); }
 }
