@@ -246,7 +246,7 @@ body {
 	}
 
   .controls {
-	  bottom: 10px;
+	  bottom: 30px;
     flex-wrap: wrap;
 	 transform: translateX(-50%) scale(0.8);
   }
