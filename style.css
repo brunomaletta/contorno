@@ -306,6 +306,13 @@ body {
     0 0 12px rgba(252,76,2,0.6);
 }
 
+#runner {
+  opacity: 0;
+}
+
+#runner.active {
+  opacity: 1;
+}
 
 
 @media (max-width: 768px) {
