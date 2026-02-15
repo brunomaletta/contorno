@@ -232,6 +232,38 @@ body {
   100% { transform: scale(1); }
 }
 
+.oddVertex {
+  fill: yellow;
+  stroke: black;
+  stroke-width: 1;
+  opacity: 0;
+  r: 3;
+  animation: fadeOdd 0.8s ease forwards;
+}
+
+@keyframes fadeOdd {
+  to {
+    opacity: 1;
+  }
+}
+
+.matchingPath {
+  stroke: #00bfff;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+
+  opacity: 0;
+  animation: fadeMatching 1s ease forwards;
+}
+
+@keyframes fadeMatching {
+  to {
+    opacity: 1;
+  }
+}
+
+
 
 @media (max-width: 768px) {
 

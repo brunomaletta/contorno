@@ -187,6 +187,9 @@ int used[MAX];
 int vis[MAX];
 
 int main() { _
+	std::ofstream algo("algorithm.json");
+	algo << fixed << setprecision(8);
+	algo << "{\n";
 	string line;
 	bool started = false;
 	vector<tuple<int, int, int>> edg;
@@ -255,6 +258,18 @@ int main() { _
 	vector<int> deg(n);
 	for (auto [a, b, c] : edg) deg[a]++, deg[b]++;
 
+	auto print_coord = [&](int i, bool comma = true) {
+		auto [x, y] = coord[orig[i]];
+		algo << "{ \"lon\": " << x << ", \"lat\": " << y << " }";
+		if (comma) algo << ",";
+		algo << "\n";
+	};
+	algo << "\"odd_vertices\": [\n";
+	int last_for_algo_print = -1;
+	for (int i = 0; i < n; i++) if (deg[i] % 2) last_for_algo_print = i;
+	for (int i = 0; i < n; i++) if (deg[i] % 2) print_coord(i, i != last_for_algo_print);
+	algo << "],\n\n";
+
 	floyd_warshall();
 	vector<tuple<int, int, ll>> blossom_edge;
 	for (int i = 0; i < n; i++) if (deg[i] % 2)
@@ -267,16 +282,25 @@ int main() { _
 	//shuffle(edg.begin(), edg.end(), rng);
 
 	ll ans = sum;
-	for (auto [a, b] : matching) {
+	algo << "\"matching_paths\": [\n";
+	for (int i_ = 0; i_ < matching.size(); i_++) {
+		auto [a, b] = matching[i_];
+		algo << "[\n";
 		while (a != b) {
 			int a2 = prv[b][a];
 			deg[a]++, deg[a2]++;
 			edg.emplace_back(a, a2, d[a][a2]);
+			print_coord(a);
 			ans += d[a][a2];
 			assert(a2 != -1);
 			a = a2;
 		}
+		print_coord(a, false);
+		algo << "]";
+		if (i_+1 < matching.size()) algo << ",";
+		algo << "\n";
 	}
+	algo << "]\n}\n";
 
 	cerr << "final ans: " << ans << endl;
 
@@ -367,5 +391,7 @@ int main() { _
 		<< coord[orig[i]].y << " " << neigh[orig[i]] << endl;
 	for (auto i : tour) cout << i << " ";
 	cout << endl;
+
+	algo.close();
 	exit(0);
 }
